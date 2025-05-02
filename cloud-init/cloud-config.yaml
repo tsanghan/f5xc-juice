@@ -1,0 +1,67 @@
+#cloud-config
+
+apt:
+  preserve_sources_list: false
+  primary:
+    - arches:
+      - amd64
+      uri: "http://ossmirror.mycloud.services/os/linux/ubuntu/"
+
+  security:
+    - arches:
+      - amd64
+      uri: "http://security.ubuntu.com/ubuntu"
+
+  sources:
+    docker-ce.list:
+      source: "deb [arch=amd64] https://download.docker.com/linux/ubuntu noble stable"
+      keyid: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+    # git.list:
+    #   source: "deb http://ppa.launchpad.net/git-core/ppa/ubuntu jammy main"
+    #   keyid: E1DD270288B4E6030699E45FA1715D88E1DF1F24
+
+packages:
+ - apt-transport-https
+ - docker-ce
+ - ec2-instance-connect
+
+package_update: true
+
+package_upgrade: true
+
+mount_default_fields: [ None, None, "auto", "defaults,nobootwait", "0", "2" ]
+
+locale: en_SG.UTF-8
+
+locale_configfile: /etc/default/locale
+
+resize_rootfs: True
+
+final_message: "The system is finally up, after $UPTIME seconds"
+
+timezone: Asia/Singapore
+
+ntp:
+  enabled: true
+
+ssh_deletekeys: True
+
+ssh_genkeytypes: ['rsa', 'ecdsa', 'ed25519']
+
+ssh_fp_console_blacklist: [ed25519]
+ssh_key_console_blacklist: [ssh-dss]
+
+write_files:
+ - content: |
+        this is a test
+   owner: root:root
+   path: /root/this_is_a_test.txt
+   permissions: '0644'
+
+runcmd:
+ - apt-get -y purge nano
+ - apt-get -y autoremove
+ - usermod -aG docker ubuntu
+ - docker pull bkimminich/juice-shop:v17.2.0
+ - cat /lib/systemd/system/ssh.service.d/ec2-instance-connect.conf
+
