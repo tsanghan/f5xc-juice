@@ -54,3 +54,7 @@ variable "enable_lb_op_hc" {
   type    = bool
   default = true
 }
+
+variable "ip_address_list" {
+  type = list(string)
+}

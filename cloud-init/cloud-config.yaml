@@ -35,7 +35,7 @@ locale: en_SG.UTF-8
 
 locale_configfile: /etc/default/locale
 
-resize_rootfs: True
+resize_rootfs: true
 
 final_message: "The system is finally up, after $UPTIME seconds"
 

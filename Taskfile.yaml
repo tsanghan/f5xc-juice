@@ -1,0 +1,36 @@
+---
+version: '3'
+
+tasks:
+  default:
+    desc: Update F5XC ip addresses
+    cmds:
+      - ./update_ips.sh
+      - tofu fmt
+
+  aliases:
+    - update
+
+  clean:
+    desc: Remove Terraform state and plan files
+    cmds:
+      - rm -f *.tfstate
+      - rm -f *.tfstate.backup
+      - rm -f *.tfplan
+
+  deep-clean:
+    desc: Remove Terraform plugin/state directory
+    cmds:
+      - task clean
+      - rm -rf .terraform
+      - rm -f .terraform.lock.hcl
+
+  dot-env:
+    desc: generate .env.sample file
+    cmds:
+      - sed -E "s%(=\"[^$].*\"|=\\$.*)%=\"\"%" <<<$(grep -v "^#" .envrc) | tee .env.example
+
+  user-data:
+    desc: extract user-data to less
+    cmds:
+      - tofu output user_data | tr -d '"' | base64 -d | gunzip | bat

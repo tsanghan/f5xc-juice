@@ -9,19 +9,19 @@ terraform {
     }
     volterra = {
       source  = "volterraedge/volterra"
-      version = "0.11.43"
+      version = "0.11.48"
     }
     http = {
       source  = "hashicorp/http"
-      version = "3.4.5"
+      version = "3.5.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = "3.7.1"
+      version = "3.8.1"
     }
     cloudinit = {
       source  = "hashicorp/cloudinit"
-      version = "2.3.7-alpha.2"
+      version = "2.3.7"
     }
   }
 }

@@ -36,4 +36,8 @@ locals {
     Name = "${random_id.server.hex}"
   }
 
+  split_dns                    = split(".", var.origin_pool_dns_name)
+  sliced_dns                   = slice(local.split_dns, 0, length(local.split_dns) - 2)
+  trimmed_origin_pool_dns_name = join(".", local.sliced_dns)
+
 }
