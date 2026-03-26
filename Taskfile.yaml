@@ -29,6 +29,11 @@ tasks:
     cmds:
       - sed -E "s%(=\"[^$].*\"|=\\$.*)%=\"\"%" <<<$(grep -v "^#" .envrc) | tee .env.example
 
+  template:
+    desc: generate terraform.tfvars.tmpl.example file
+    cmds:
+      - sed -E "s%(=\s+\"[^$].*\"|=\\$.*)%= \"\"%" terraform.tfvars.tmpl | tee terraform.tfvars.tmpl.example
+
   user-data:
     desc: extract user-data to less
     cmds:

@@ -5,6 +5,11 @@
 # echo "dirname : [$(dirname "$0")]"
 # echo "pwd     : [$(pwd)]"
 
+if [ ! -e terraform.tfvars.tmpl ]; then
+    echo "'terraform.tfvars.tmpl' does not exists!!"
+    exit 42
+fi
+
 # fetch json IP Addresses list
 IPADDRESS_RAW=$(curl -sSL https://docs.cloud.f5.com/docs-v2/downloads/platform/reference/network-cloud-ref/ips-domains.json | \
     jq -Mr '.services.regional_edges.regions | 
@@ -19,6 +24,7 @@ IPADDRESS_LIST=$(awk 'NF{a[++n]=$0} END {for (i=1;i<=n;i++) {printf "\t\"%s\"%s\
 if [ -e terraform.tfvars ]; then
     : > terraform.tfvars
 fi
+
 
 while read -r line; do
     echo "$line" | tee -a terraform.tfvars

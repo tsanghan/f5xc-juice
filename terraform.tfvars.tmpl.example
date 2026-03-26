@@ -1,0 +1,6 @@
+domains              = ""
+name                 = ""
+namespace            = ""
+origin_pool_port     = ""
+origin_pool_dns_name = ""
+enable_lb_op_hc      = true
