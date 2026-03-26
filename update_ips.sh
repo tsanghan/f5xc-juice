@@ -16,7 +16,10 @@ IPADDRESS_LIST=$(awk 'NF{a[++n]=$0} END {for (i=1;i<=n;i++) {printf "\t\"%s\"%s\
 
 # Write terraform.tfvars
 
-: > terraform.tfvars
+if [ -e terraform.tfvars ]; then
+    : > terraform.tfvars
+fi
+
 while read -r line; do
     echo "$line" | tee -a terraform.tfvars
 done < terraform.tfvars.tmpl
