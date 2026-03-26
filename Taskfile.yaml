@@ -14,14 +14,14 @@ tasks:
   clean:
     desc: Remove Terraform state and plan files
     cmds:
-      - rm -f *.tfstate
-      - rm -f *.tfstate.backup
+      - rm -f *.tfstate{,.backup}
       - rm -f *.tfplan
 
   deep-clean:
     desc: Remove Terraform plugin/state directory
+    deps:
+      - clean
     cmds:
-      - task clean
       - rm -rf .terraform
       - rm -f .terraform.lock.hcl
 
@@ -33,4 +33,4 @@ tasks:
   user-data:
     desc: extract user-data to less
     cmds:
-      - tofu output user_data | tr -d '"' | base64 -d | gunzip | bat
+      - tofu output -raw user_data | base64 -d | gunzip | bat
