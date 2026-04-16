@@ -2,6 +2,7 @@ set shell := ["bash", "-c"]
 
 tf := require("terraform")
 tofu := require("tofu")
+bat := require("bat")
 
 default:
     just -l
@@ -25,6 +26,7 @@ destroy-tf:
 # tofu destroy
 destroy-tofu:
     {{tofu}} destroy -auto-approve
+
 update-tf:
     ./update_ips.sh
     {{tf}} fmt
@@ -47,4 +49,4 @@ gen-dot-env-example:
 
 # Output user-date for viewing
 user-data:
-    terraform output -raw user_data | base64 -d | gunzip | bat
+    terraform output -raw user_data | base64 -d | gunzip | {{bat}}
