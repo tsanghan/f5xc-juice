@@ -12,7 +12,7 @@ fi
 
 # fetch json IP Addresses list
 IPADDRESS_RAW=$(curl -sSL https://docs.cloud.f5.com/docs-v2/downloads/platform/reference/network-cloud-ref/ips-domains.json | \
-    jq -Mr '.services.regional_edges.regions | 
+    jq -Mr '.services.regional_edges.regions |
             .asia.ipv4_cidrs[],.europe.ipv4_cidrs[],.americas.ipv4_cidrs[]'| sort -n)
 
 # Build HCL list: ["1.2.3.4","5.6.7.8"]
@@ -24,7 +24,6 @@ IPADDRESS_LIST=$(awk 'NF{a[++n]=$0} END {for (i=1;i<=n;i++) {printf "\t\"%s\"%s\
 if [ -e terraform.tfvars ]; then
     : > terraform.tfvars
 fi
-
 
 while read -r line; do
     echo "$line" | tee -a terraform.tfvars

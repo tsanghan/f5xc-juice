@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.tofu": "terraform",
+    "*.tf.tmpl": "terraform"
+  }
+}

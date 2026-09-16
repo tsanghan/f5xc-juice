@@ -23,6 +23,8 @@
 #
 #########################################
 data "cloudinit_config" "juice_docker" {
+  gzip          = false
+  base64_encode = false
 
   part {
     filename     = "hello-script.sh"
@@ -55,7 +57,7 @@ resource "aws_vpc" "juice" {
   cidr_block           = "10.255.0.0/16"
   enable_dns_hostnames = true
 
-  tags = local.vpc_tags
+  tags = merge(local.vpc_tags, local.common_tags)
 
 }
 
@@ -72,7 +74,7 @@ resource "aws_subnet" "juice_sub" {
   map_public_ip_on_launch = false
   availability_zone       = "ap-southeast-1a"
 
-  tags = local.juice_sub_tags
+  tags = merge(local.juice_sub_tags, local.common_tags)
 
 }
 
@@ -85,7 +87,7 @@ resource "aws_route_table" "juice_rt" {
     gateway_id = aws_internet_gateway.juice.id
   }
 
-  tags = local.igw_rt_tags
+  tags = merge(local.igw_rt_tags, local.common_tags)
 
 }
 
@@ -95,46 +97,43 @@ resource "aws_route_table_association" "juice_sub" {
 }
 
 # SECURITY GROUPS #
-# Nginx security group
 resource "aws_security_group" "juice_sg" {
-  name   = "web_server_sg"
+  name   = "F5XC Securing Security Group"
   vpc_id = aws_vpc.juice.id
 
-  # HTTP access from anywhere
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["${data.http.myip.response_body}/32"]
-    description = "my IP Address"
-  }
+  tags = merge({ Name = "F5XC Securing Security Group" }, local.common_tags)
+}
 
-  ingress {
-    from_port   = 1001
-    to_port     = 1016
-    protocol    = "tcp"
-    cidr_blocks = ["${data.http.myip.response_body}/32", "90.242.166.97/32", "111.223.104.76/32", "42.61.112.56/32"]
-    description = "my IP Addresses"
-  }
+resource "aws_vpc_security_group_ingress_rule" "ingress_rules_tcp" {
+  for_each = local.ingress_security_group_rules
 
-  ingress {
-    from_port   = 1001
-    to_port     = 1016
-    protocol    = "tcp"
-    cidr_blocks = var.ip_address_list
+  security_group_id = aws_security_group.juice_sg.id
+  ip_protocol       = each.value.ip_protocol
+  from_port         = each.value.from_port
+  to_port           = each.value.to_port
+  cidr_ipv4         = each.value.cidr_ipv4
 
-  }
+  tags = merge(each.value.tags, local.common_tags)
+}
 
-  # outbound internet access
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+resource "aws_vpc_security_group_ingress_rule" "ingress_rules_ssh" {
+  for_each = local.ssh_cidr_set
 
-  tags = local.common_tags
+  security_group_id = aws_security_group.juice_sg.id
+  ip_protocol       = "tcp"
+  from_port         = 22
+  to_port           = 22
+  cidr_ipv4         = each.value
 
+  tags = merge({ Name = "SSH" }, local.common_tags)
+}
+
+resource "aws_vpc_security_group_egress_rule" "egress_rule" {
+  security_group_id = aws_security_group.juice_sg.id
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
+
+  tags = merge({ Name = "Allow All Traffic Outbound" }, local.common_tags)
 }
 
 resource "aws_default_security_group" "default" {
@@ -147,7 +146,7 @@ resource "aws_eip" "juice" {
 
   depends_on = [aws_internet_gateway.juice]
 
-  tags = local.eip_tags
+  tags = merge(local.eip_tags, local.common_tags)
 }
 
 ##########################################
@@ -167,7 +166,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-resolute-26.04-amd64-server-*"]
   }
 
   filter {
@@ -204,9 +203,7 @@ resource "aws_instance" "juice" {
   key_name               = aws_key_pair.ubuntu.key_name
   user_data              = data.cloudinit_config.juice_docker.rendered
 
-  tags = {
-    Name = "tsanghan-juice-${local.random.Name}"
-  }
+  tags = merge(local.ec2_instance_tags, local.common_tags)
 
 }
 
@@ -218,28 +215,31 @@ resource "aws_instance" "juice" {
 # |____/|_| \_|____/
 #
 ##########################################
-# data "aws_route53_zone" "training" {
-#   name = "mylab.training"
+
+# resource "volterra_dns_zone_record" "juice" {
+#   dns_zone_name = "learnf5.cloud"
+#   group_name    = "juice"
+#   rrset {
+#     description = "juice"
+#     ttl         = "300"
+#     a_record {
+#       name   = "juice-origin"
+#       values = [aws_eip.juice.public_ip]
+#     }
+#   }
 # }
 
-# resource "aws_route53_record" "juice" {
-#   zone_id = data.aws_route53_zone.training.zone_id
-#   name    = "juices-shop.mylab.training"
-#   type    = "A"
-#   ttl     = 300
-#   records = [aws_eip.juice.public_ip]
-# }
-
-resource "volterra_dns_zone_record" "juice" {
+resource "f5xc_dns_zone_record" "juice" {
   dns_zone_name = "learnf5.cloud"
   group_name    = "juice"
-  rrset {
+  rrset = {
     description = "juice"
     ttl         = "300"
-    a_record {
-      #name   = local.trimmed_origin_pool_dns_name
-      name   = "juice-origin"
-      values = [aws_eip.juice.public_ip]
+    type_record_set_choice = {
+      a_record = {
+        name   = "juice-origin"
+        values = [aws_eip.juice.public_ip]
+      }
     }
   }
 }
@@ -253,38 +253,38 @@ resource "volterra_dns_zone_record" "juice" {
 #
 ##########################################
 
-module "health_check" {
-  source            = "./modules/health_check"
-  name              = format("%s-class-health-check-tf", var.name)
-  namespace         = var.namespace
-  health_check_path = var.health_check_path
+# module "health_check" {
+#   source            = "./modules/health_check"
+#   name              = format("%s-class-health-check-tf", var.name)
+#   namespace         = var.namespace
+#   health_check_path = var.health_check_path
 
-  for_each = var.enable_lb_op_hc ? { "enabled" = true } : {}
-}
+#   for_each = var.enable_lb_op_hc ? { "enabled" = true } : {}
+# }
 
 
-module "dns_origin_pool" {
-  source               = "./modules/origin_pool"
-  name                 = format("%s-pool-tf", var.name)
-  origin_pool_port     = var.origin_pool_port
-  origin_pool_dns_name = var.origin_pool_dns_name
-  health_check_name    = try(module.health_check["enabled"].health_check_name, null)
-  namespace            = var.namespace
-  depends_on           = [module.health_check]
+# module "dns_origin_pool" {
+#   source               = "./modules/origin_pool"
+#   name                 = format("%s-pool-tf", var.name)
+#   origin_pool_port     = var.origin_pool_port
+#   origin_pool_dns_name = var.origin_pool_dns_name
+#   health_check_name    = try(module.health_check["enabled"].health_check_name, null)
+#   namespace            = var.namespace
+#   depends_on           = [module.health_check]
 
-  for_each = var.enable_lb_op_hc ? { "enabled" = true } : {}
+#   for_each = var.enable_lb_op_hc ? { "enabled" = true } : {}
 
-}
+# }
 
-module "load_balancer" {
-  source      = "./modules/load_balancer"
-  name        = format("%s-lb-tf", var.name)
-  origin_pool = try(module.dns_origin_pool["enabled"].name, null)
-  domains     = var.domains
-  namespace   = var.namespace
-  http_port   = var.http_port
-  depends_on  = [module.dns_origin_pool]
+# module "load_balancer" {
+#   source      = "./modules/load_balancer"
+#   name        = format("%s-lb-tf", var.name)
+#   origin_pool = try(module.dns_origin_pool["enabled"].name, null)
+#   domains     = var.domains
+#   namespace   = var.namespace
+#   http_port   = var.http_port
+#   depends_on  = [module.dns_origin_pool]
 
-  for_each = var.enable_lb_op_hc ? { "enabled" = true } : {}
+#   for_each = var.enable_lb_op_hc ? { "enabled" = true } : {}
 
-}
+# }

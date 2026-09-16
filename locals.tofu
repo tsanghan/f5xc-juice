@@ -4,12 +4,11 @@
 
 locals {
   f5xc_api_token = var.f5xc_api_token
-
   region         = "ap-southeast-1"
 
   owner = "Wong_Tsang_Han"
 
-  managed_by = "Terraform"
+  managed_by = "OpenTofu"
 
   resource-name-prefix = "F5XC-Securing-Class"
 

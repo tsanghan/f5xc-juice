@@ -4,7 +4,7 @@
 
 variable "public_key" {
   type    = string
-  default = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIISLxyrw7SGaqlZdZHjVrjTv1k/Q48OWiz6rrhY/BHtc tsanghan"
+  default = null
 }
 
 variable "key_pair_name" {
@@ -57,4 +57,19 @@ variable "enable_lb_op_hc" {
 
 variable "ip_address_list" {
   type = list(string)
+}
+
+variable "extra_cidrs" {
+  type    = string
+  default = null
+}
+
+variable "in_github_action" {
+  type    = bool
+  default = false
+}
+
+variable "f5xc_api_token" {
+  type    = string
+  default = null
 }
