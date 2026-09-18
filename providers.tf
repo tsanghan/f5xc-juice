@@ -41,9 +41,16 @@ terraform {
 # }
 
 provider "f5xc" {
-  api_token = local.f5xc_api_token
-  url = "https://training-dev.console.ves.volterra.io/api"
-  throttling = {}
+  api_token  = local.f5xc_api_token
+  url        = "https://training-dev.console.ves.volterra.io/api"
+  throttling = {
+    max_retries         = 5
+    initial_backoff     = "250ms"
+    max_backoff         = "8s"
+    multiplier          = 2.0
+    jitter_ratio        = 0.2
+    respect_retry_after = true
+  }
 }
 
 

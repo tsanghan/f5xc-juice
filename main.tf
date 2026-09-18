@@ -216,75 +216,17 @@ resource "aws_instance" "juice" {
 #
 ##########################################
 
-# resource "volterra_dns_zone_record" "juice" {
+# resource "f5xc_dns_zone_record" "juice" {
 #   dns_zone_name = "learnf5.cloud"
 #   group_name    = "juice"
-#   rrset {
+#   rrset = {
 #     description = "juice"
 #     ttl         = "300"
-#     a_record {
-#       name   = "juice-origin"
-#       values = [aws_eip.juice.public_ip]
+#     type_record_set_choice = {
+#       a_record = {
+#         name   = "juice-origin"
+#         values = [aws_eip.juice.public_ip]
+#       }
 #     }
 #   }
-# }
-
-resource "f5xc_dns_zone_record" "juice" {
-  dns_zone_name = "learnf5.cloud"
-  group_name    = "juice"
-  rrset = {
-    description = "juice"
-    ttl         = "300"
-    type_record_set_choice = {
-      a_record = {
-        name   = "juice-origin"
-        values = [aws_eip.juice.public_ip]
-      }
-    }
-  }
-}
-
-##########################################
-#  _____ ______  ______
-# |  ___| ___\ \/ / ___|
-# | |_  |___ \\  / |
-# |  _|  ___) /  \ |___
-# |_|   |____/_/\_\____|
-#
-##########################################
-
-# module "health_check" {
-#   source            = "./modules/health_check"
-#   name              = format("%s-class-health-check-tf", var.name)
-#   namespace         = var.namespace
-#   health_check_path = var.health_check_path
-
-#   for_each = var.enable_lb_op_hc ? { "enabled" = true } : {}
-# }
-
-
-# module "dns_origin_pool" {
-#   source               = "./modules/origin_pool"
-#   name                 = format("%s-pool-tf", var.name)
-#   origin_pool_port     = var.origin_pool_port
-#   origin_pool_dns_name = var.origin_pool_dns_name
-#   health_check_name    = try(module.health_check["enabled"].health_check_name, null)
-#   namespace            = var.namespace
-#   depends_on           = [module.health_check]
-
-#   for_each = var.enable_lb_op_hc ? { "enabled" = true } : {}
-
-# }
-
-# module "load_balancer" {
-#   source      = "./modules/load_balancer"
-#   name        = format("%s-lb-tf", var.name)
-#   origin_pool = try(module.dns_origin_pool["enabled"].name, null)
-#   domains     = var.domains
-#   namespace   = var.namespace
-#   http_port   = var.http_port
-#   depends_on  = [module.dns_origin_pool]
-
-#   for_each = var.enable_lb_op_hc ? { "enabled" = true } : {}
-
 # }

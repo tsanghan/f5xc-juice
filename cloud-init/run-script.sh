@@ -14,8 +14,9 @@ for port in {1..16}; do
 EOF
 done
 
-machinectl shell ubuntu@.host systemctl --user enable podman.socket
-machinectl shell ubuntu@.host systemctl --user start podman.socket
+loginctl enable-linger ubuntu
+machinectl shell ubuntu@.host /usr/bin/systemctl --user enable podman.socket
+machinectl shell ubuntu@.host /usr/bin/systemctl --user start podman.socket
 sudo -u ubuntu bash -l -c "podman compose -f /tmp/podman-compose.yaml up -d"
 
 # podman run -d -p "$((3000 + port))":3000 docker.io/bkimminich/juice-shop:v17.3.0

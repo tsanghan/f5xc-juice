@@ -5,7 +5,7 @@
 locals {
   f5xc_api_token = var.f5xc_api_token
 
-  region         = "ap-southeast-1"
+  region = "ap-southeast-1"
 
   owner = "Wong_Tsang_Han"
 
